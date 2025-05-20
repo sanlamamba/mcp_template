@@ -3,8 +3,9 @@
 from typing import Any, Dict, List, Optional, Callable
 import logging
 
-from langchain.agents import Tool
-from langchain.tools import BaseTool
+# Updated imports - Tool is in langchain.tools, not langchain_community.agents
+from langchain.tools import Tool
+from langchain_community.tools import BaseTool
 
 # Set up logger
 logger = logging.getLogger(__name__)
@@ -64,9 +65,16 @@ def create_calculator_tool() -> Any:
 def create_web_search_tool() -> Any:
     """Create a web search tool with error handling."""
     try:
-        from langchain_community.utilities import GoogleSearchAPIWrapper
+        # Try to import from different locations
+        try:
+            from langchain_google_community import GoogleSearchAPIWrapper
 
-        search = GoogleSearchAPIWrapper()
+            search = GoogleSearchAPIWrapper()
+        except (ImportError, ValueError):
+            # Fallback to community version if Google-specific package isn't available
+            from langchain_community.utilities import GoogleSearchAPIWrapper
+
+            search = GoogleSearchAPIWrapper()
 
         return Tool(
             name="web_search",
@@ -91,7 +99,8 @@ def create_web_search_tool() -> Any:
 def create_wikipedia_tool() -> Any:
     """Create a Wikipedia tool with error handling."""
     try:
-        from langchain.tools import WikipediaQueryRun
+        # Updated imports from langchain_community
+        from langchain_community.tools import WikipediaQueryRun
         from langchain_community.utilities import WikipediaAPIWrapper
 
         wikipedia = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())

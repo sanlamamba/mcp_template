@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Body, status
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, ConfigDict
 
 from mcp_server.agents.gpt_agent import GPTAgent
 from mcp_server.langchain_adapters.tools import create_tools_toolkit
@@ -50,10 +50,9 @@ class ChatRequest(BaseModel):
     conversation_id: Optional[str] = Field(None, description="Conversation ID")
     history: Optional[List[Message]] = Field(None, description="Conversation history")
 
-    class Config:
-        """Additional configuration."""
-
-        schema_extra = {
+    # Updated to use ConfigDict and json_schema_extra instead of schema_extra
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "prompt": "What's the weather like today?",
                 "model": "gpt-4o",
@@ -64,6 +63,7 @@ class ChatRequest(BaseModel):
                 "history": None,
             }
         }
+    )
 
 
 class ToolCall(BaseModel):
@@ -335,7 +335,7 @@ async def chat(request: ChatRequest = Body(...)):
 
                 # Convert tool calls to dict for response
                 tool_calls_dict = (
-                    [tool_call.dict() for tool_call in tool_calls]
+                    [tool_call.model_dump() for tool_call in tool_calls]
                     if tool_calls
                     else None
                 )
@@ -416,7 +416,7 @@ async def list_models():
         ),
     ]
 
-    return {"models": [model.dict() for model in models]}
+    return {"models": [model.model_dump() for model in models]}
 
 
 @router.get(
